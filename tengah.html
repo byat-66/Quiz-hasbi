@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz Hasbi</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #000000, #333333);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 { margin-bottom: 10px; }
+    .btn {
+      display: inline-block;
+      margin: 10px;
+      padding: 12px 20px;
+      border: 2px solid white;
+      border-radius: 12px;
+      background: transparent;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .btn:hover { background: white; color: black; }
+    .btn.correct { background: #2ecc71; }
+    .btn.wrong { background: #e74c3c; }
+    img {
+      width: 80px;
+      display: block;
+      margin: auto;
+    }
+    #countdown {
+      font-size: 22px;
+      margin-top: 20px;
+      color: #f1c40f;
+    }
+    .progress {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .circle {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      border: 2px solid white;
+      background: transparent;
+      transition: background 0.3s ease;
+    }
+    .circle.correct { background: #2ecc71; }
+    .circle.wrong { background: #e74c3c; }
+  </style>
+</head>
+<body>
+
+  <h1>Quiz Hasbi</h1>
+
+  <!-- Progress lingkaran -->
+  <div class="progress" id="progress">
+    <div class="circle" id="c1"></div>
+    <div class="circle" id="c2"></div>
+    <div class="circle" id="c3"></div>
+    <div class="circle" id="c4"></div>
+    <div class="circle" id="c5"></div>
+  </div>
+
+  <div id="quiz">
+    <h2 id="question">Pertanyaan</h2>
+    <div id="answers"></div>
+  </div>
+
+  <div id="countdown"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, set }
+      from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDXuqIcYDUCUrfMvTJYkxE4th5jaYtqvNU",
+      authDomain: "quiz-e5eb9.firebaseapp.com",
+      databaseURL: "https://quiz-e5eb9-default-rtdb.firebaseio.com",
+      projectId: "quiz-e5eb9",
+      storageBucket: "quiz-e5eb9.firebasestorage.app",
+      messagingSenderId: "7293691348",
+      appId: "1:7293691348:web:2099586f251d61b42ce241",
+      measurementId: "G-657MF74MLX"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let player = localStorage.getItem("playerName") || "Anonim";
+    let score = 0;
+    let qIndex = 0;
+
+    const questions = [
+      {
+        q: "Apa game kesukaan Hasbi?",
+        options: [
+          {text:"Geometry Dash", img:"gd.jpeg", correct:true},
+          {text:"Free Fire", img:"ff.png", correct:false},
+          {text:"Minecraft", img:"mc.png", correct:false},
+          {text:"Mobile Legends", img:"ml.png", correct:false}
+        ]
+      },
+      {
+        q: "Apa makanan kesukaan Hasbi?",
+        options: [
+          {text:"Nasi Goreng", img:"ng.png", correct:false},
+          {text:"Bakso", img:"bk.png", correct:false},
+          {text:"Ayam Goreng", img:"ayam.png", correct:true},
+          {text:"Mie Ayam", img:"mie.png", correct:false}
+        ]
+      },
+      {
+        q: "Apa hobi Hasbi?",
+        options: [
+          {text:"Menggambar", img:"kon.png", correct:true},
+          {text:"Main Game", img:"ngen.png", correct:false},
+          {text:"Coding", img:"gg.png", correct:false},
+          {text:"Mukbang", img:"am.png", correct:false}
+        ]
+      },
+      {
+        q: "Siapa sahabat Hasbi?",
+        options: [
+          {text:"Aby", img:"abu.png", correct:true},
+          {text:"Neymar", img:"n.png", correct:false},
+          {text:"KOMPLECK", img:"k.png", correct:false},
+          {text:"MCKUNZZZ", img:"m.png", correct:false}
+        ]
+      },
+      {
+        q: "Kapan Hasbi kembali ke Balikpapan?",
+        options: [
+          {text:"Lulus sekolah", img:"ls.png", correct:true},
+          {text:"Tidak pernah kembali", img:"never.png", correct:false}
+        ]
+      }
+    ];
+
+    function showQuestion() {
+      if(qIndex >= questions.length) {
+        saveScore();
+        return;
+      }
+      const q = questions[qIndex];
+      document.getElementById("question").innerText = q.q;
+      const answersDiv = document.getElementById("answers");
+      answersDiv.innerHTML = "";
+      q.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.innerHTML = `<img src="${opt.img}" alt=""><br>${opt.text}`;
+        btn.onclick = () => checkAnswer(btn, opt.correct);
+        answersDiv.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(btn, correct) {
+      if(correct) {
+        btn.classList.add("correct");
+        score += 20;
+        document.getElementById("c"+(qIndex+1)).classList.add("correct");
+      } else {
+        btn.classList.add("wrong");
+        score -= 10;
+        document.getElementById("c"+(qIndex+1)).classList.add("wrong");
+      }
+      qIndex++;
+      setTimeout(showQuestion, 800);
+    }
+
+    function saveScore() {
+      // simpan ke firebase
+      set(ref(db, "scores/" + player), { name: player, score: score });
+      // simpan ke localStorage
+      localStorage.setItem("playerScore", score);
+
+      // tampilkan countdown
+      let timeLeft = 5;
+      const countdownDiv = document.getElementById("countdown");
+      countdownDiv.innerText = `Menuju hasil dalam ${timeLeft} detik...`;
+      const timer = setInterval(() => {
+        timeLeft--;
+        countdownDiv.innerText = `Menuju hasil dalam ${timeLeft} detik...`;
+        if(timeLeft <= 0) {
+          clearInterval(timer);
+          window.location.href = "akhir.html";
+        }
+      }, 1000);
+    }
+
+    showQuestion();
+  </script>
+
+</body>
+</html>

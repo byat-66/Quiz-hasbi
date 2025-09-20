@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Hasil Quiz</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #000000, #333333);
+      color: white;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 { margin-bottom: 20px; }
+    #score {
+      font-size: 28px;
+      margin: 15px 0;
+    }
+    #scoreboard {
+      margin-top: 30px;
+      text-align: left;
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      border-radius: 12px;
+    }
+    #footer {
+      margin-top: 40px;
+      font-size: 14px;
+      color: #ccc;
+      line-height: 1.6;
+    }
+    #footer strong {
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎉 Quiz Selesai 🎉</h1>
+  <p>Hai <span id="playerName"></span>, skor kamu:</p>
+  <div id="score"></div>
+
+  <div id="scoreboard">
+    <h3>🏆 Papan Skor</h3>
+    <ul id="rank"></ul>
+  </div>
+
+  <div id="footer">
+    <p>
+      Website quiz ini dibuat dengan penuh semangat oleh <strong>Haikal</strong>.  
+      Haikal merancang halaman ini untuk menghadirkan pengalaman belajar dan bermain yang seru,  
+      sambil mengasah pengetahuan dengan cara menyenangkan.  
+    </p>
+    <p>
+      Terima kasih sudah mencoba quiz ini! Semoga bermanfaat dan jangan lupa terus belajar 💡
+    </p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, onValue }
+      from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDXuqIcYDUCUrfMvTJYkxE4th5jaYtqvNU",
+      authDomain: "quiz-e5eb9.firebaseapp.com",
+      databaseURL: "https://quiz-e5eb9-default-rtdb.firebaseio.com",
+      projectId: "quiz-e5eb9",
+      storageBucket: "quiz-e5eb9.firebasestorage.app",
+      messagingSenderId: "7293691348",
+      appId: "1:7293691348:web:2099586f251d61b42ce241",
+      measurementId: "G-657MF74MLX"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const player = localStorage.getItem("playerName") || "Anonim";
+    const score = localStorage.getItem("playerScore") || 0;
+
+    document.getElementById("playerName").innerText = player;
+    document.getElementById("score").innerText = score;
+
+    function loadScores() {
+      const rankList = document.getElementById("rank");
+      const scoresRef = ref(db, "scores");
+      onValue(scoresRef, snapshot => {
+        const data = snapshot.val() || {};
+        const arr = Object.values(data).sort((a,b) => b.score - a.score);
+        rankList.innerHTML = "";
+        arr.forEach((p,i) => {
+          const li = document.createElement("li");
+          li.textContent = `${i+1}. ${p.name} - ${p.score}`;
+          rankList.appendChild(li);
+        });
+      });
+    }
+
+    loadScores();
+  </script>
+
+</body>
+</html>
